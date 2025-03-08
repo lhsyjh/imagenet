@@ -50,7 +50,6 @@ import torch
 
 from diagnostics import print_diagnostics
 
-from ..build import MinkowskiEngineBackend
 from MinkowskiEngineBackend._C import (
     MinkowskiAlgorithm,
     CoordinateMapKey,

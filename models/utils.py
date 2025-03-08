@@ -11,7 +11,7 @@ import numpy.random as random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from MinkowskiEngine.MinkowskiEngine import SparseTensor
+from MinkowskiEngine import SparseTensor
 
 class MinkowskiGRN(nn.Module):
     """ GRN layer for sparse tensors.

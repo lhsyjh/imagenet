@@ -28,7 +28,7 @@ def train_one_epoch(model: torch.nn.Module,
 
     optimizer.zero_grad()
     for data_iter_step, (samples, labels) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
-         # we use a per iteration (instead of per epoch) lr scheduler
+        # we use a per iteration (instead of per epoch) lr scheduler
         if data_iter_step % update_freq == 0:
            utils.adjust_learning_rate(optimizer, data_iter_step / len(data_loader) + epoch, args)
 

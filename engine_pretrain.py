@@ -49,7 +49,7 @@ def train_one_epoch(model: torch.nn.Module,
                     update_grad=(data_iter_step + 1) % update_freq == 0)
         if (data_iter_step + 1) % update_freq == 0:
             optimizer.zero_grad()
-            torch.cuda.empty_cache() # clear the GPU cache at a regular interval for training ME network
+            torch.cuda.empty_cache()  # clear the GPU cache at a regular interval for training ME network
         
         metric_logger.update(loss=loss_value)
 

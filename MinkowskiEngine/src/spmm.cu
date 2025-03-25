@@ -28,6 +28,8 @@
 #include "math_functions.cuh"
 
 #include <cusparse.h>
+#include <thrust/sort.h>
+#include <thrust/execution_policy.h>
 
 #include <ATen/cuda/CUDAContext.h>
 #include <ATen/cuda/CUDAUtils.h>

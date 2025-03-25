@@ -29,6 +29,8 @@
 #include <thrust/count.h>
 #include <thrust/execution_policy.h>
 #include <thrust/remove.h>
+#include <thrust/device_vector.h>
+#include <thrust/unique.h> 
 
 #include <functional>
 #include <memory>

@@ -31,6 +31,7 @@
 #include <thrust/remove.h>
 #include <thrust/device_vector.h>
 #include <thrust/unique.h> 
+#include <thrust/host_vector.h>
 
 #include <functional>
 #include <memory>

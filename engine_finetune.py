@@ -145,8 +145,9 @@ def evaluate(data_loader, model, device, use_amp=False):
             if isinstance(output, dict):
                 output = output['logits']
             loss = criterion(output, target)
-
-        torch.cuda.synchronize()
+          
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
         
         acc1, acc5 = accuracy(output, target, topk=(1, 5))
 

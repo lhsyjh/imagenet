@@ -17,6 +17,12 @@ from timm.utils import accuracy, ModelEma
 import utils
 from utils import adjust_learning_rate
 
+from sklearn.metrics import classification_report, f1_score
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
 def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
                     data_loader: Iterable, optimizer: torch.optim.Optimizer,
                     device: torch.device, epoch: int, loss_scaler, max_norm: float = 0,
@@ -127,7 +133,8 @@ def evaluate(data_loader, model, device, use_amp=False):
 
     # switch to evaluation mode
     model.eval()
-
+  
+    all_logits, all_preds, all_labels = [], [], []
     for batch in metric_logger.log_every(data_loader, 10, header):
         images = batch[0]
         target = batch[-1]
@@ -157,10 +164,48 @@ def evaluate(data_loader, model, device, use_amp=False):
         metric_logger.update(loss=loss.item())
         metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
         metric_logger.meters['acc5'].update(acc5.item(), n=batch_size)
+      
+        probs = torch.softmax(output, dim=1)
+        preds = probs.argmax(1)
+        all_logits.append(probs.cpu())
+        all_preds.append(preds.cpu())
+        all_labels.append(target.cpu())
     # gather the stats from all processes
     if torch.cuda.is_available():
         metric_logger.synchronize_between_processes()
     print('* Acc@1 {top1.global_avg:.3f} Acc@5 {top5.global_avg:.3f} loss {losses.global_avg:.3f}'
           .format(top1=metric_logger.acc1, top5=metric_logger.acc5, losses=metric_logger.loss))
+  
+    all_logits = torch.cat(all_logits).numpy()
+    all_preds  = torch.cat(all_preds).numpy()
+    all_labels = torch.cat(all_labels).numpy()
+    macro_f1 = f1_score(all_labels, all_preds, average='macro')
+    print(f"[Extra] Macro‑F1: {macro_f1:.4f}")
+  
+    n_classes = all_logits.shape[1]
+    y_true_bin = label_binarize(all_labels, classes=list(range(n_classes)))
+    try:
+        auc = roc_auc_score(y_true_bin, all_logits, average='macro')
+        print(f"[Extra] ROC‑AUC (macro, OvR): {auc:.4f}")
+    except ValueError:  # 只有一个类别时会报错
+        pass
+    print(classification_report(all_labels, all_preds, digits=4))
+
+    features = []
+    for images, _ in data_loader:
+        images = images.to(device)
+        with torch.no_grad():
+            feat = model.forward_features(images)      # (B, C, H, W)
+            feat = feat.mean(dim=[2,3]).cpu().numpy()  # Global average pool -> (B, C)
+        features.append(feat)
+    features = np.concatenate(features)
+
+    tsne = TSNE(n_components=2, random_state=42)
+    emb = tsne.fit_transform(features)
+    plt.figure(figsize=(8,6))
+    sns.scatterplot(x=emb[:,0], y=emb[:,1], hue=all_labels, palette="tab10", s=20)
+    plt.title("t‑SNE of ConvNeXt Features")
+    plt.legend(bbox_to_anchor=(1.05,1), loc="upper left", fontsize="small")
+    plt.tight_layout(); plt.savefig("tsne_features.png"); plt.close()
 
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}

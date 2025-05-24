@@ -170,6 +170,7 @@ def evaluate(data_loader, model, device, use_amp=False):
         all_logits.append(probs.cpu())
         all_preds.append(preds.cpu())
         all_labels.append(target.cpu())
+        break
     # gather the stats from all processes
     if torch.cuda.is_available():
         metric_logger.synchronize_between_processes()

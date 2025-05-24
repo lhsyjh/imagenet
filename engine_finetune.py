@@ -18,6 +18,7 @@ import utils
 from utils import adjust_learning_rate
 
 from sklearn.metrics import classification_report, f1_score
+from sklearn.preprocessing import label_binarize
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 import seaborn as sns

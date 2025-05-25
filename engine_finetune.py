@@ -171,7 +171,6 @@ def evaluate(data_loader, model, device, use_amp=False):
         all_logits.append(probs.cpu())
         all_preds.append(preds.cpu())
         all_labels.append(target.cpu())
-        break
     # gather the stats from all processes
     if torch.cuda.is_available():
         metric_logger.synchronize_between_processes()
@@ -198,7 +197,7 @@ def evaluate(data_loader, model, device, use_amp=False):
         images = images.to(device)
         with torch.no_grad():
             feat = model.forward_features(images)      # (B, C, H, W)
-            feat = feat.mean(dim=[2,3]).cpu().numpy()  # Global average pool -> (B, C)
+            feat = feat.cpu().numpy()  # Global average pool -> (B, C)
         features.append(feat)
     features = np.concatenate(features)
 
@@ -208,6 +207,8 @@ def evaluate(data_loader, model, device, use_amp=False):
     sns.scatterplot(x=emb[:,0], y=emb[:,1], hue=all_labels, palette="tab10", s=20)
     plt.title("t‑SNE of ConvNeXt Features")
     plt.legend(bbox_to_anchor=(1.05,1), loc="upper left", fontsize="small")
-    plt.tight_layout(); plt.savefig("tsne_features.png"); plt.close()
+    plt.tight_layout()
+    plt.savefig("tsne_features.png")
+    plt.close()
 
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
